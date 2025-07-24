@@ -1,0 +1,49 @@
+
+Feature 1: Namespace Create
+Create a namespace with appropriate labels, default quotas, and optionally enable features like service mesh and backups.
+
+User Stories:
+Story 1.1: As a user, I want to request a namespace with standard quotas, with default network policies, rolebindings and option to enable service mesh and backups
+
+Story 1.2: As a user, I want to request a namespace with custom quotas, with default network policies, rolebindings and option to enable service mesh and backups.
+
+Story 1.3: As a platform engineer, I want a Tekton pipeline to generate the namespace configuration manifests and push a Git PR that will be auto merged for standard quotarequests.
+
+Story 1.4: As a platform engineer, I want a Tekton pipeline to generate the namespace configuration manifests and push a Git PR for custom quota requests.
+
+Story 1.5: As a platform engineer, I want to create a Jira issue when a custom namespace request is made to track its approval and merge.
+
+Feature 2: Namespace Update
+Update an existing namespace's labels (i.e enable/disable service mesh or backups) and / or quotas
+
+User Stories:
+Story 2.1: As a user, I want to submit a request to enable or disable backups/service mesh for a namespace.
+
+Story 2.2: As a user, I want to update the resource quota of an existing namespace. The resource quota sizes can be standard or custom
+
+Story 2.3: As a platform engineer, I want a Tekton pipeline to generate nameespace configuration manifests with appropriate labels and push a Git PR that will be auto merged.
+
+Story 2.4: As a platform engineer, I want a Tekton pipeline to generate resource quota configuration manifests and push a Git PR that will be auto merged for Standard quota requests.
+
+Story 2.5: As a platform engineer, I want a Tekton pipeline to generate resource quota configuration manifests and push a Git PR for Custom quota requests..
+
+Feature 3: SMB Static PV Management
+Create and Update static SMB-based persistent volumes.
+
+User Stories:
+Story 3.1: As a user, I want to request the creation of a static SMB PV with specified parameters.
+
+Story 3.2: As a user, I want to update parameters of an existing static SMB PV.
+
+Story 3.3: As a platform engineer, I want a Tekton pipeline to create/update static SMB PV configuration manifests and push a Git PR.
+
+Story 3.4: As a platform engineer, I want to create a Jira issue when a static SMB PV request is made to track its approval and merge.
+
+
+Feature 4: Status and Error Notifications
+Notify the consumers of the workflows regarding the status with applicable additional detailsand errors.
+
+User Stories:
+Story 4.1: As a platform engineer, I want to send a notification back to the consumer with Status, Git PR and JIRA Links for namespace and PV requests.
+
+Story 4.2: As a platform engineer, I want to send a notification back to the consumer when any error occurs.
