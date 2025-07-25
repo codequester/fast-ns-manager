@@ -47,3 +47,81 @@ User Stories:
 Story 4.1: As a platform engineer, I want to send a notification back to the consumer with Status, Git PR and JIRA Links for namespace and PV requests.
 
 Story 4.2: As a platform engineer, I want to send a notification back to the consumer when any error occurs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Initialize error array
+errors=()
+
+# Validate NAMESPACE_NAME
+[[ "${#NAMESPACE_NAME}" -le 63 ]] || errors+=("NAMESPACE_NAME exceeds 63 characters")
+[[ "$NAMESPACE_NAME" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]] || errors+=("NAMESPACE_NAME is not DNS-1123 compliant")
+
+# APP_ID: ≤ 5 alphanumeric
+[[ "$APP_ID" =~ ^[a-zA-Z0-9]{1,5}$ ]] || errors+=("APP_ID must be ≤ 5 alphanumeric characters")
+
+# LOB: ≤ 6 alphanumeric
+[[ "$LOB" =~ ^[a-zA-Z0-9]{1,6}$ ]] || errors+=("LOB must be ≤ 6 alphanumeric characters")
+
+# CLUSTER_ENV: lab, prod, nonprod
+[[ "$CLUSTER_ENV" =~ ^(lab|prod|nonprod)$ ]] || errors+=("CLUSTER_ENV must be lab, prod, or nonprod")
+
+# CI_ENVIRONMNET: lab, dev, uat
+[[ "$CI_ENVIRONMNET" =~ ^(lab|dev|uat)$ ]] || errors+=("CI_ENVIRONMNET must be lab, dev, or uat")
+
+# REQUESTS_CPU: integer ≤ 9999
+[[ "$REQUESTS_CPU" =~ ^[0-9]+$ ]] && (( REQUESTS_CPU <= 9999 )) || errors+=("REQUESTS_CPU must be integer ≤ 9999")
+
+# LIMITS_CPU: integer ≥ REQUESTS_CPU
+[[ "$LIMITS_CPU" =~ ^[0-9]+$ ]] && (( LIMITS_CPU >= REQUESTS_CPU )) || errors+=("LIMITS_CPU must be integer ≥ REQUESTS_CPU")
+
+# MAX_PODS: integer ≤ 999
+[[ "$MAX_PODS" =~ ^[0-9]+$ ]] && (( MAX_PODS <= 999 )) || errors+=("MAX_PODS must be integer ≤ 999")
+
+# Memory value parsing helpers
+parse_mem() { echo "$1" | sed -E 's/([0-9]+)(Mi|Gi)/\1/'; }
+get_unit()   { echo "$1" | sed -E 's/[0-9]+(Mi|Gi)/\1/'; }
+
+# Validate REQUESTS_MEMORY
+if [[ "$REQUESTS_MEMORY" =~ ^[0-9]+(Mi|Gi)$ ]]; then
+  R_MEM_VAL=$(parse_mem "$REQUESTS_MEMORY")
+  R_MEM_UNIT=$(get_unit "$REQUESTS_MEMORY")
+  (( R_MEM_VAL <= 9999 )) || errors+=("REQUESTS_MEMORY must be ≤ 9999")
+else
+  errors+=("REQUESTS_MEMORY must be numeric with Mi or Gi suffix")
+fi
+
+# Validate LIMITS_MEMORY
+if [[ "$LIMITS_MEMORY" =~ ^[0-9]+(Mi|Gi)$ ]]; then
+  L_MEM_VAL=$(parse_mem "$LIMITS_MEMORY")
+  L_MEM_UNIT=$(get_unit "$LIMITS_MEMORY")
+  if [[ "$R_MEM_UNIT" == "$L_MEM_UNIT" ]]; then
+    (( L_MEM_VAL >= R_MEM_VAL )) || errors+=("LIMITS_MEMORY must be ≥ REQUESTS_MEMORY")
+  else
+    [[ "$L_MEM_UNIT" == "Gi" ]] || errors+=("LIMITS_MEMORY must be ≥ REQUESTS_MEMORY in compatible unit")
+  fi
+else
+  errors+=("LIMITS_MEMORY must be numeric with Mi or Gi suffix")
+fi
+
+# ENABLE_BACKUP and ISTIO_DISCOVERY: enabled or disabled
+[[ "$ENABLE_BACKUP" =~ ^(enabled|disabled)$ ]] || errors+=("ENABLE_BACKUP must be enabled or disabled")
+[[ "$ISTIO_DISCOVERY" =~ ^(enabled|disabled)$ ]] || errors+=("ISTIO_DISCOVERY must be enabled or disabled")
+
+# Print JSON response
+if [[ ${#errors[@]} -eq 0 ]]; then
+  jq -n --arg status "success" '{status: $status, message: "All validations passed."}'
+else
+  jq -n --arg status "error" --argjson messages "$(printf '%s\n' "${errors[@]}" | jq -R . | jq -s .)" \
+    '{status: $status, errors: $messages}'
+fi
